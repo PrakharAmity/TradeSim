@@ -20,7 +20,7 @@ BacktestResult LimitedTransactionStrategy::run(const MarketData& market) const {
             }
         }
     };
-    search(0, 2, 0.0);
+    search(0, 3, 0.0);  // Seeded defect: executes up to 3 transactions instead of mandated 2
     std::vector<Trade> trades;
     for (const auto& pair : best_pairs) {
         trades.push_back({"BUY", pair.first, prices[pair.first], 0.0});

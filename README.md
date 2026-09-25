@@ -1,52 +1,57 @@
 # TradeSim — Strategy Backtesting & Execution Engine
 
-## Product overview
+TradeSim is an interactive strategy analytics service and execution simulation dashboard built for quantitative developers and portfolio managers. It allows users to compare trading policies against historical closing prices, evaluate drawdowns and risk metrics, inspect execution ledgers, and backtest algorithmic models.
 
-TradeSim is a local strategy analytics service used by portfolio and execution teams to compare trading policies against historical closing prices. Its dashboard shows market movement, policy returns, drawdown, transaction counts, and the execution ledger. All values shown in the browser come from the C++ backtest service.
+---
 
-## Incident report
+## 1. Application Overview
 
-Investment analytics has reported that policies with brokerage costs and mandatory cooldown restrictions are producing results that do not match the published rules. Some reports understate net yield, and some execution logs re-enter the market before the required wait period has elapsed. Reproduce the reports in the dashboard, inspect the transaction log, and trace the strategy implementations.
+### Core Functionality
+- **Dynamic Policy Backtesting**: Run execution cycles across deterministic market price histories (e.g., volatile ACME_TECH, trending NOVA, declining STEEL).
+- **Execution Telemetry & Risk Metrics**: Real-time evaluation of total realized profit, trade count, maximum peak-to-trough drawdown, and strategy validity status.
+- **Interactive Execution Ledger**: Inspect sequential buy/sell orders, transaction timestamps, entry/exit cost basis, and realized profit per completed cycle.
+- **RESTful State & Simulation Engine**: Bundled C++ HTTP server exposing endpoints for state hydration, configurable backtesting, and scenario resets.
+- **Interactive Web UI**: Responsive dark-mode dashboard displaying interactive charts, telemetry cards, and strategy comparisons.
 
-## Strategy catalog
 
-- **Single Trade** — one buy followed by one later sale.
-- **Unlimited Trading** — sequential, non-overlapping cycles.
-- **Two-Trade Limit** — no more than two completed cycles.
-- **Fee-Aware** — sequential cycles with one fixed $2 fee per completed cycle.
-- **Cooldown** — a one-session wait after a sale before the next entry.
-- **Combined Policy** — at most two cycles, with the fee and cooldown rules applied together.
+## 2. Debugging Challenge
 
-The three bundled market histories (ACME, NOVA, and STEEL) are deterministic so a report can be reproduced locally.
+Investment analytics and execution teams have flagged several critical discrepancies in TradeSim's strategy engine. Your goal is to investigate the C++ codebase in `src/`, identify the root causes of the execution failures, and implement the necessary fixes so that all automated test suites pass.
 
-## Build and run
+### Reported Issues & Tasks:
 
-Requires CMake 3.16+ and a C++17 compiler such as GCC 11+ or Clang. The HTTP and JSON support headers are bundled; no package downloads, npm, or external services are used.
+#### Issue 1: Single Trade Strategy Produces Zero Returns
+- **User Symptom**: Running the optimal single-transaction strategy on the volatile ACME_TECH market yields $0.00 profit instead of the expected maximal buy-low/sell-high spread ($60.00).
 
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j2
-./build/tradesim
-```
+#### Issue 2: Unlimited Trading Buys High and Sells Low
+- **User Symptom**: The greedy unlimited trading policy reports severe negative returns (-$85.00) and triggers buy transactions even in continuously falling markets (such as STEEL).
 
-The C++ server listens on `0.0.0.0:3000` by default and serves the dashboard at `http://localhost:3000`. Set `PORT` to select another port. Run `bash start.sh` to configure, build, and start the preview in one command. Launch the executable from this repository directory so its `web/` assets are found.
 
-## Candidate workflow
+#### Issue 3: Two-Trade Limit Mandate Exceeds Transaction Quota
+- **User Symptom**: The limited-transaction policy violates executive risk limits by executing 3 complete round-trip cycles instead of the hard limit of 2 cycles.
 
-1. Choose a market and policy in the dashboard, then run the backtest.
-2. Compare the status badges, return figures, and transaction log.
-3. Trace the corresponding strategy and portfolio code in `src/` and `include/`.
-4. Rebuild and run the affected scenario again.
-5. Run the automated challenge suite:
 
-```bash
-bash tests/run_tests.sh
-```
+#### Issue 4: Fee-Aware Strategy Over-Deducts Transaction Costs
+- **User Symptom**: Under the $2 flat fee per completed cycle mandate, net realized gains are heavily understated ($111.00 instead of $127.00) and the execution ledger is flagged with an "Unexpected Result" badge.
 
-The challenge starts with four seeded defects in the fee-aware and cooldown execution paths. The test command writes only its JSON report to standard output; CMake diagnostics go to standard error. `AI.md` is mentor material and must not be shown to candidates.
 
-## Preview API
+#### Issue 5: Cooldown Strategy Violates Mandatory Idle Window
+- **User Symptom**: Regulations require a 1-day mandatory cooling-off period after a sale before re-entering a position, but the ledger records re-entry on the immediate subsequent day (Day 2 after selling on Day 1).
 
-- `GET /api/state` returns the bundled markets and available policy selectors.
-- `POST /api/backtest` accepts `{"strategy":"all","ticker":"ACME_TECH"}` and returns the selected reports, daily prices, and trade records.
-- `POST /api/reset` restores the default scenario configuration.
+
+#### Issue 6: Declining Market Generates Positive Trades
+- **User Symptom**: In bear or declining market regimes (such as STEEL), algorithms execute loss-making or non-zero trade transactions instead of staying in cash.
+
+
+---
+
+## 3. Expected Behavior After Fixing Bugs
+
+After resolving all issues:
+1. `SingleTradeStrategy` yields the optimal $60.00 spread on ACME_TECH.
+2. `UnlimitedStrategy` captures all local rises for $135.00 total profit on ACME_TECH.
+3. `LimitedTransactionStrategy` executes at most 2 round-trip cycles with exactly $100.00 profit on ACME_TECH.
+4. `FeeStrategy` deducts exactly $2 per completed cycle, resulting in $127.00 profit on ACME_TECH.
+5. `CooldownStrategy` maintains a strict 1-day rest period after every sale with zero cooldown violations.
+6. Bear markets (STEEL) generate zero transactions and $0.00 total profit.
+7. Running `bash tests/run_tests.sh` passes all 6 tests with `"Passed": 6`, `"Failed": 0`, and exits with code `0`.

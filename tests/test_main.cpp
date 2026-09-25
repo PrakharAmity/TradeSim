@@ -87,6 +87,6 @@ int main() {
         std::cout << "}";
     }
     std::cout << ",\n  \"Passed\": " << passed << ",\n  \"Failed\": " << failed
-              << ",\n  \"Total bugs\": 4,\n  \"Total Execution time\": \"" << total_ms << "ms\"\n}\n";
+              << ",\n  \"Total bugs\": 6,\n  \"Total Execution time\": \"" << total_ms << "ms\"\n}\n";
     return failed == 0 ? 0 : 1;
 }

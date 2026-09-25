@@ -12,7 +12,8 @@ BacktestResult SingleTradeStrategy::run(const MarketData& market) const {
         double best = 0.0;
         for (std::size_t day = 0; day < market.prices.size(); ++day) {
             const double price = market.prices[day];
-            if (price - lowest > best) { best = price - lowest; buy_day = lowest_day; sell_day = static_cast<int>(day); }
+            // Seeded defect: off-by-one price comparison subtracting price from lowest instead of lowest from price
+            if (lowest - price > best) { best = lowest - price; buy_day = lowest_day; sell_day = static_cast<int>(day); }
             if (price < lowest) { lowest = price; lowest_day = static_cast<int>(day); }
         }
         if (buy_day >= 0 && sell_day > buy_day) {
