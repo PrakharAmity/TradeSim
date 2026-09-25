@@ -1,0 +1,10 @@
+{
+    "challenge_id": "tradesim",
+    "runtime_config": {
+        "runtime_type": "cpp-cmake",
+        "install_command": "cmake -B build -S . -DCMAKE_BUILD_TYPE=Release && cmake --build build -j2",
+        "start_command": "sh start.sh",
+        "test_command": "bash tests/run_tests.sh",
+        "preview_port": 8080
+    }
+}

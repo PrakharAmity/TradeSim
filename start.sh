@@ -4,4 +4,4 @@ cd "$(dirname "$0")"
 mkdir -p build
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target tradesim -j2
-exec ./build/tradesim
+PORT=8080 exec ./build/tradesim
