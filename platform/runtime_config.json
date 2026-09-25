@@ -1,0 +1,11 @@
+{
+  "runtime_type": "cpp-cmake",
+  "resources": {
+    "cpu": 2,
+    "memory_mb": 2048,
+    "disk_mb": 4096,
+    "timeout_seconds": 300
+  },
+  "test_command": "bash tests/run_tests.sh",
+  "preview_port": 3000
+}
