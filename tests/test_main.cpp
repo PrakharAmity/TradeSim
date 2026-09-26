@@ -89,4 +89,4 @@ int main() {
     std::cout << ",\n  \"Passed\": " << passed << ",\n  \"Failed\": " << failed
               << ",\n  \"Total bugs\": 6,\n  \"Total Execution time\": \"" << total_ms << "ms\"\n}\n";
     return failed == 0 ? 0 : 1;
-}
+}   
